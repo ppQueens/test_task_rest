@@ -4,6 +4,20 @@ from .models import Chat, Message
 from django.utils import timezone
 
 
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = 'pk', 'username', 'password'
+
+    def create(self, validated_data):
+        user = User.objects.create(username=validated_data['username'])
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+
 class MessageSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.id')
     chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all())

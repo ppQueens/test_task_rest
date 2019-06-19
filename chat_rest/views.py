@@ -1,18 +1,25 @@
+from django.contrib.auth.models import User
 from rest_framework.exceptions import PermissionDenied
 from .models import Message, Chat
 from rest_framework import generics, permissions
-from .serializers import PrivateChatSerializer, RoomSerializer, MessageSerializer
-from . import custompermission
+from .serializers import PrivateChatSerializer, RoomSerializer, MessageSerializer, UserSerializer
+from . import custom_permission
 import json
 
 
-class PrivateChatView(generics.CreateAPIView):
+class UserCreationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    name = 'create_user'
+
+
+class PrivateChatCreationView(generics.CreateAPIView):
     queryset = Chat.objects.all()
     serializer_class = PrivateChatSerializer
     name = 'create_private_chat'
 
 
-class MessageList(generics.ListAPIView):
+class MessageListView(generics.ListAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     name = 'list_messages'
@@ -29,19 +36,20 @@ class MessageList(generics.ListAPIView):
         return self.queryset.filter(chat=chat).order_by('-created_time')[:self.kwargs['quantity']]
 
 
-class MessageFixedList(MessageList):
+class MessageFixedListView(MessageListView):
     name = 'list_10_messages'
 
     def get_queryset(self):
         self.kwargs['quantity'] = 10
-        return super(MessageFixedList, self).get_queryset()
+        return super(MessageFixedListView, self).get_queryset()
 
 
 class MessageView(generics.RetrieveUpdateAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     name = 'get_or_update_message'
-    permission_classes = permissions.IsAuthenticated, custompermission.HasAccessToPrivateChat, custompermission.IsCurrentUserOwner
+    permission_classes = permissions.IsAuthenticated, custom_permission.HasAccessToPrivateChat, \
+                         custom_permission.IsCurrentUserOwner
 
     def put(self, request, *args, **kwargs):
         request.data['edited'] = True
@@ -53,11 +61,11 @@ class MessageView(generics.RetrieveUpdateAPIView):
         return self.partial_update(request, *args, **kwargs)
 
 
-class MessageCreation(generics.CreateAPIView):
+class MessageCreationView(generics.CreateAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     name = 'create_message'
-    permission_classes = permissions.IsAuthenticated, custompermission.HasAccessToPrivateChat
+    permission_classes = permissions.IsAuthenticated, custom_permission.HasAccessToPrivateChat
 
     def post(self, request, *args, **kwargs):
         request.data['chat'] = kwargs['chat']
@@ -67,7 +75,7 @@ class MessageCreation(generics.CreateAPIView):
         serializer.save(author=self.request.user)
 
 
-class RoomView(generics.CreateAPIView):
+class RoomCreationView(generics.CreateAPIView):
     queryset = Chat.objects.all()
     serializer_class = RoomSerializer
     name = 'create_room'
