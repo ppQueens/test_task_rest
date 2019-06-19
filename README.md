@@ -10,6 +10,4 @@ Put/Patch should allow edit message in the room with restriction: user can’t e
 You should provide also login/registration endpoints. Please use JWT token based auth.
 
 ## TODO
-* reg/login endpoints
-* JWT auth token based
 * unittests

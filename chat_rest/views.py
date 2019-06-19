@@ -4,7 +4,6 @@ from .models import Message, Chat
 from rest_framework import generics, permissions
 from .serializers import PrivateChatSerializer, RoomSerializer, MessageSerializer, UserSerializer
 from . import custom_permission
-import json
 
 
 class UserCreationView(generics.CreateAPIView):
@@ -29,7 +28,7 @@ class MessageListView(generics.ListAPIView):
         serializer.save(author=self.request.user)
 
     def get_queryset(self):
-        chat_id = json.loads(self.request.body)['chat']
+        chat_id = self.request.data['chat'] = self.kwargs['chat']
         chat = Chat.objects.get(id=chat_id)
         if chat.private and not Chat.objects.filter(users_in_chat=self.request.user, id=chat_id):
             raise PermissionDenied(detail="Private chat")
