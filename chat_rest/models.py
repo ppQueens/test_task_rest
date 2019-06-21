@@ -12,9 +12,22 @@ class Chat(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return "chat {}".format(self.pk)
+
+    def last_message(self):
+        message = self.chat_message.last()
+        if message:
+            return message.content
+
+    def last_message_time(self):
+        message = self.chat_message.last()
+        if message:
+            return message.created_time
+
 
 class Message(models.Model):
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    chat = models.ForeignKey(Chat, related_name='chat_message', on_delete=models.CASCADE)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     edited = models.BooleanField(default=False)
