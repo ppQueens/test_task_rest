@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.id')
-    chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all())
+    chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all(), required=True)
 
     class Meta:
         model = Message
@@ -33,15 +33,15 @@ class MessageSerializer(serializers.ModelSerializer):
         return super(MessageSerializer, self).update(instance, validated_data)
 
 
-class PrivateChatSerializer(serializers.HyperlinkedModelSerializer):
-    users_in_chat = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
+class PrivateChatSerializer(serializers.ModelSerializer):
+    users_in_chat = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all(), required=True)
 
     class Meta:
         model = Chat
         fields = 'private', 'users_in_chat'
 
 
-class RoomSerializer(serializers.HyperlinkedModelSerializer):
+class RoomSerializer(serializers.ModelSerializer):
     start_by_user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     users_in_chat = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
 

@@ -1,10 +1,9 @@
 from django.contrib.auth.models import User
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 from .models import Message, Chat
 from rest_framework import generics, permissions
 from .serializers import PrivateChatSerializer, RoomSerializer, MessageSerializer, UserSerializer
 from . import custom_permission
-
 
 class UserCreationView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -16,6 +15,11 @@ class PrivateChatCreationView(generics.CreateAPIView):
     queryset = Chat.objects.all()
     serializer_class = PrivateChatSerializer
     name = 'create_private_chat'
+    permission_classes = permissions.IsAuthenticated, custom_permission.IsOneOfUser
+
+    def post(self, request, *args, **kwargs):
+        request.data['private'] = True
+        return self.create(request, *args, **kwargs)
 
 
 class MessageListView(generics.ListAPIView):
@@ -59,6 +63,15 @@ class MessageView(generics.RetrieveUpdateAPIView):
         request.data['edited'] = True
         return self.partial_update(request, *args, **kwargs)
 
+    def get_object(self):
+        chat_id = self.kwargs['chat']
+        chat = Chat.objects.get(id=chat_id)
+        message_id = self.kwargs['pk']
+        try:
+            return Message.objects.get(chat=chat, id=message_id)
+        except Message.DoesNotExist:
+            raise NotFound("in this chat not found message with this id")
+
 
 class MessageCreationView(generics.CreateAPIView):
     queryset = Message.objects.all()
@@ -78,3 +91,7 @@ class RoomCreationView(generics.CreateAPIView):
     queryset = Chat.objects.all()
     serializer_class = RoomSerializer
     name = 'create_room'
+
+    def post(self, request, *args, **kwargs):
+        request.data['start_by_user'] = request.user.id
+        return self.create(request, *args, **kwargs)
