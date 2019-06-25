@@ -8,6 +8,3 @@ Post request should create a new message in the room
 Put/Patch should allow edit message in the room with restriction: user can’t edit the message older that 30 minutes, user can edit only own messages
 
 You should provide also login/registration endpoints. Please use JWT token based auth.
-
-## TODO
-* unittests
